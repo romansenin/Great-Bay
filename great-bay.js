@@ -18,35 +18,42 @@ var connection = mysql.createConnection({
 
 //Table-name: items
 
-// Get user input
-inquirer.prompt([
+function postItem(itemName, bidderName, priceName) {
+  console.log("Inserting a new playlist...\n");
+  var query = connection.query(
+    "INSERT INTO items SET ?",
     {
-        type: "list",
-        name: "choice",
-        message: "Would you like to bid on an item or post an item?",
-        choices: ["bid", "post"]
-      },
-]).then(function(answers){
-    switch(answers.choice){
-        case "bid":
-            // bid function
-            break;
-        case "post":
-            // post function
-            break;
+      item: itemName,
+      bidder: bidderName,
+      price: priceName
+    },
+    function(err, res) {
+      if (err) throw err;
+      console.log(res.affectedRows + " item inserted!\n");
     }
-});
+  );
 
-//bid ufnction
-// items = select * from
-inquirer.prompt([
-    {
-        type: "target",
-        name: "choice",
-        message: "Would you like to bid on an item or post an item?",
-        choices: items
-    }
-]).then(function(chosen){
-    let bidTarget = chosen.target;
-    
-})
+  // logs the actual query being run
+  console.log(query.sql);
+}
+
+function bidItem() {
+
+  var query = connection.query("SELECT * FROM items", function(err, res) {
+    if (err) throw err;
+    // Log all results of the SELECT statement
+    console.log(res);
+  });
+
+  // logs the actual query being run
+  console.log(query.sql);
+}
+
+function readItems() {
+  console.log("Selecting all items...\n");
+  connection.query("SELECT * FROM items", function(err, res) {
+    if (err) throw err;
+    // Log all results of the SELECT statement
+    console.log(res);
+  });
+}
