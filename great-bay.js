@@ -24,7 +24,7 @@ inquirer.prompt([
         type: "list",
         name: "choice",
         message: "Would you like to bid on an item or post an item?",
-        choices: ["bid", "post"]
+        choices: ["bid", "post", "quit"]
       },
 ]).then(function(answers){
     switch(answers.choice){
@@ -53,20 +53,23 @@ inquirer.prompt([
                 postItem(postAnswers.item, postAnswers.bidder, postAnswers.price)
             });
             break;
+        case "quit":
+          connection.end();
+          break;
         default:
             console.log("Unknown command...");
     }
 });
 
 
-function postItem(itemName, bidderName, priceName) {
+function postItem(itemName, bidderName, priceAmount) {
   console.log("Inserting a new item...\n");
   var query = connection.query(
     "INSERT INTO items SET ?",
     {
       item: itemName,
       bidder: bidderName,
-      price: priceName
+      price: priceAmount
     },
     function(err, res) {
       if (err) throw err;
