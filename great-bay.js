@@ -1,103 +1,142 @@
-var inquirer = require("inquirer");
+// npm packages
+let inquirer = require("inquirer");
+let mysql = require("mysql");
 
-var mysql = require("mysql");
-
-var connection = mysql.createConnection({
-    host: "localhost",
-
-    // Your port; if not 3306
-    port: 3306,
-
-    // Your username
-    user: "root",
-
-    // Your password
-    password: "root",
-    database: "greatbayDB"
+let connection = mysql.createConnection({
+  host: "localhost",
+  port: 3306,
+  user: "root",
+  password: "root",
+  database: "greatbayDB"
 });
 
-//Table-name: items
+connection.connect(function(err) {
+  if (err) throw err;
+  // console.log("Connected as id: " + connection.threadId);
+  console.log(" \n--- Welcome to Great Bay! ---\n ");
+  start();
+});
 
-// Get user input
-inquirer.prompt([
-    {
-        type: "list",
-        name: "choice",
-        message: "Would you like to bid on an item or post an item?",
-        choices: ["bid", "post", "quit"]
+function start() {
+  inquirer
+    .prompt({
+      name: "postOrBid",
+      type: "rawlist",
+      message: "Would you like to [POST] an auction or [BID] on an auction?",
+      choices: ["POST", "BID", "QUIT"]
+    })
+    .then(function(answer) {
+      if (answer.postOrBid.toUpperCase() === "POST") {
+        postAuction();
+      } else if (answer.postOrBid.toUpperCase() === "BID") {
+        bidAuction();
+      } else {
+        connection.end();
+      }
+    });
+}
+
+function postAuction() {
+  inquirer
+    .prompt([
+      {
+        name: "item",
+        type: "message",
+        message: "What is the item you wish to submit?"
       },
-]).then(function(answers){
-    switch(answers.choice){
-        case "bid":
-            // bid function
-            break;
-        case "post":
-            // post function
-            inquirer.prompt([
-                {
-                    type: "input",
-                    name: "bidder",
-                    message: "What is your name?"
-                },
-                {
-                    type: "input",
-                    name: "item",
-                    message: "What is the item?"
-                },
-                {
-                    type: "input",
-                    name: "price",
-                    message: "What is the price?"
+      {
+        name: "startingBid",
+        type: "input",
+        message: "What would you like the starting bid to be?",
+        validate: function(value) {
+          return !isNaN(value);
+        }
+      }
+    ])
+    .then(function(answer) {
+      connection.query(
+        "insert into auctions (itemName, startingBid, highestBid) values (?, ?, ?)",
+        [answer.item, answer.startingBid, answer.startingBid],
+        function(err) {
+          if (err) throw err;
+          console.log("Your auction was created successfully!");
+          start();
+        }
+      );
+    });
+}
+
+function bidAuction() {
+  connection.query("select * from auctions", function(err, rows) {
+    if (err) throw err;
+    for (let i = 0; i < rows.length; i++) {
+      console.log("\n" + "-".repeat(20) + "\n");
+      for (field in rows[i]) {
+        if (field !== "id") {
+          let fieldDisp;
+          if (field === "itemName") {
+            fieldDisp = "item name";
+          } else {
+            let index = field.indexOf("Bid");
+            fieldDisp = field.slice(0, index) + " " + "bid";
+          }
+          let result;
+          if (fieldDisp.slice(-3) === "bid") {
+            result = "$" + rows[i][field];
+          } else {
+            result = rows[i][field];
+          }
+          console.log(fieldDisp + ": " + result);
+        }
+      }
+    }
+    console.log("\n" + "-".repeat(20) + "\n");
+    inquirer
+      .prompt({
+        name: "choice",
+        type: "rawlist",
+        choices: function(value) {
+          let choiceArr = [];
+          for (let i = 0; i < rows.length; i++) {
+            choiceArr.push(rows[i].itemName);
+          }
+          return choiceArr;
+        },
+        message: "What auction would you like to place a bid on?"
+      })
+      .then(function(itemAnswer) {
+        inquirer
+          .prompt({
+            name: "bid",
+            type: "input",
+            message: "How much would you like to bid?",
+            validate: function(value) {
+              return !isNaN(value);
+            }
+          })
+          .then(function(bidAnswer) {
+            connection.query(
+              "select highestBid from auctions where itemName = ?",
+              [itemAnswer.choice],
+              function(err, row) {
+                if (err) throw err;
+                if (row[0].highestBid < bidAnswer.bid) {
+                  connection.query(
+                    "update auctions set highestBid = ? where itemName = ?",
+                    [bidAnswer.bid, itemAnswer.choice],
+                    function(err) {
+                      if (err) throw err;
+                      console.log("Bid successfully placed!");
+                      start();
+                    }
+                  );
+                } else {
+                  console.log("Your bid was too low. Try again.");
+                  start();
                 }
-            ]).then(function(postAnswers){
-                postItem(postAnswers.item, postAnswers.bidder, postAnswers.price)
-            });
-            break;
-        case "quit":
-          connection.end();
-          break;
-        default:
-            console.log("Unknown command...");
-    }
-});
-
-
-function postItem(itemName, bidderName, priceAmount) {
-  console.log("Inserting a new item...\n");
-  var query = connection.query(
-    "INSERT INTO items SET ?",
-    {
-      item: itemName,
-      bidder: bidderName,
-      price: priceAmount
-    },
-    function(err, res) {
-      if (err) throw err;
-      console.log(res.affectedRows + " item inserted!\n");
-    }
-  );
-
-  // logs the actual query being run
-  console.log(query.sql);
-}
-
-function bidItem() {
-
-  var query = connection.query("SELECT * FROM items", function(err, res) {
-    if (err) throw err;
-    // Log all results of the SELECT statement
-    console.log(res);
-  });
-
-  // logs the actual query being run
-  console.log(query.sql);
-}
-
-function readItems() {
-  console.log("Selecting all items...\n");
-  connection.query("SELECT * FROM items", function(err, res) {
-    if (err) throw err;
-    // Log all results of the SELECT statement
-    console.log(res);
+              }
+            );
+          });
+      });
   });
 }
