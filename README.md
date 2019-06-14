@@ -1,8 +1,8 @@
 # Great-Bay
 
-Allows users to create and bid on assorted items.
+`Allows users to create and bid on assorted items.`
 
----
+
 
 To set up and use the app:
   1. Download/Clone the repository and navigate to it.
@@ -11,4 +11,7 @@ To set up and use the app:
       npm install
       npm start
       ```
-
+---
+### Technologies Used:
+* inquirer.js
+* MYSQL
