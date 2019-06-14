@@ -2,8 +2,13 @@
 
 Allows users to create and bid on assorted items.
 
-## Set Up
+---
 
-To set up the app:
-  1. Download/clone the repository and navigate to it.
-  2. 
+To set up and use the app:
+  1. Download/Clone the repository and navigate to it.
+  2. Run these two commands within your terminal:
+      ```bash
+      npm install
+      npm start
+      ```
+
