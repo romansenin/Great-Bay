@@ -1,5 +1,5 @@
 {
-  "name": "Great-Bay",
+  "name": "great-bay",
   "version": "1.0.0",
   "description": "Allows users to create and bid on assorted items, tasks, jobs, or projects.",
   "main": "index.js",
