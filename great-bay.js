@@ -21,7 +21,7 @@ function start() {
   inquirer
     .prompt({
       name: "postOrBid",
-      type: "rawlist",
+      type: "list",
       message: "Would you like to [POST] an auction or [BID] on an auction?",
       choices: ["POST", "BID", "QUIT"]
     })
@@ -94,11 +94,11 @@ function bidAuction() {
     inquirer
       .prompt({
         name: "choice",
-        type: "rawlist",
+        type: "list",
         choices: function(value) {
           let choiceArr = [];
           for (let i = 0; i < rows.length; i++) {
-            choiceArr.push(rows[i].itemName);
+            choiceArr.push(i + 1 + ". " + rows[i].itemName);
           }
           return choiceArr;
         },
@@ -116,14 +116,17 @@ function bidAuction() {
           })
           .then(function(bidAnswer) {
             connection.query(
-              "select highestBid from auctions where itemName = ?",
-              [itemAnswer.choice],
+              "select highestBid from auctions where id = ?",
+              [itemAnswer.choice.slice(0, itemAnswer.choice.indexOf("."))],
               function(err, row) {
                 if (err) throw err;
                 if (row[0].highestBid < bidAnswer.bid) {
                   connection.query(
-                    "update auctions set highestBid = ? where itemName = ?",
-                    [bidAnswer.bid, itemAnswer.choice],
+                    "update auctions set highestBid = ? where id = ?",
+                    [
+                      bidAnswer.bid,
+                      itemAnswer.choice.slice(0, itemAnswer.choice.indexOf("."))
+                    ],
                     function(err) {
                       if (err) throw err;
                       console.log("Bid successfully placed!");
