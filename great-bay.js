@@ -86,7 +86,13 @@ function bidAuction() {
           } else {
             result = rows[i][field];
           }
-          console.log(fieldDisp + ": " + result);
+          let fieldDispArr = fieldDisp.split(" ");
+          // console.log(resultArr);
+          fieldDispArr.forEach((element, index) => {
+            fieldDispArr[index] = element[0].toUpperCase() + element.slice(1);
+          });
+          // console.log(resultArr);
+          console.log(fieldDispArr.join(" ") + ": " + result);
         }
       }
     }
